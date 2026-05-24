@@ -1,0 +1,15 @@
+{
+  "ignorePatterns": [
+    "node_modules/**",
+    "playwright-report/**",
+    "support/dist/**",
+    "support/gherkin-fixtures/**",
+    "support/gherkin.test.ts",
+    "test-results/**"
+  ],
+  "printWidth": 100,
+  "semi": false,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "all"
+}

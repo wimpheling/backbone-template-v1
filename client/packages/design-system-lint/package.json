@@ -1,0 +1,23 @@
+{
+  "name": "@backbone/design-system-lint",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/oxlint-plugin.d.ts",
+      "default": "./dist/src/oxlint-plugin.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "check:architecture": "node dist/src/check-design-system-architecture.js",
+    "test": "pnpm run build && node --test \"dist/test/**/*.test.js\"",
+    "test:prepared": "node --test \"dist/test/**/*.test.js\""
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "oxlint": "^1.66.0",
+    "typescript": "^6.0.3"
+  }
+}

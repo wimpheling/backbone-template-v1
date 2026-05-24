@@ -1,0 +1,23 @@
+{
+  "name": "@backbone/pr-slide",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node src/cli.js generate",
+    "list": "node src/cli.js list",
+    "open": "node src/cli.js open",
+    "dev": "node src/cli.js dev",
+    "build": "node src/cli.js build",
+    "export": "node src/cli.js export",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@slidev/cli": "^52.4.0",
+    "@slidev/theme-default": "^0.25.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.14"
+  },
+  "packageManager": "pnpm@10.22.0"
+}

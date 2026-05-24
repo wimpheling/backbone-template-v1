@@ -1,0 +1,47 @@
+{
+  "name": "backbone-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "ladle": "ladle serve --stories \"{packages/design-system-basic/src,src}/**/*.stories.{ts,tsx}\" --viteConfig ./vite.ladle.config.ts",
+    "ladle:build": "ladle build --stories \"{packages/design-system-basic/src,src}/**/*.stories.{ts,tsx}\" --viteConfig ./vite.ladle.config.ts",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "pnpm --filter @backbone/design-system-lint build && pnpm --filter @backbone/design-system-lint run check:architecture && oxlint .",
+    "lint:prepared": "pnpm --filter @backbone/design-system-lint run check:architecture && oxlint .",
+    "test": "pnpm --filter @backbone/design-system-lint test && vitest run src packages/design-system-basic/src",
+    "test:prepared": "pnpm --filter @backbone/design-system-lint run test:prepared && vitest run src packages/design-system-basic/src",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck",
+    "check:prepared": "pnpm run format:check && pnpm run lint:prepared && pnpm run typecheck"
+  },
+  "dependencies": {
+    "@backbone/design-system": "workspace:*",
+    "@bufbuild/protobuf": "latest",
+    "@connectrpc/connect": "latest",
+    "@connectrpc/connect-web": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router": "^7.15.0"
+  },
+  "devDependencies": {
+    "@backbone/design-system-lint": "workspace:*",
+    "@bufbuild/buf": "latest",
+    "@bufbuild/protoc-gen-es": "latest",
+    "@ladle/react": "^5.1.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "latest",
+    "oxfmt": "^0.51.0",
+    "oxlint": "^1.66.0",
+    "oxlint-tsgolint": "^0.22.1",
+    "typescript": "^6.0.3",
+    "vite": "latest",
+    "vitest": "^4.0.14"
+  },
+  "packageManager": "pnpm@10.22.0"
+}

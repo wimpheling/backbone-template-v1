@@ -1,0 +1,21 @@
+[package]
+name = "backbone_server_lints"
+version = "0.1.0"
+authors = ["authors go here"]
+description = "description goes here"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+dylint_linting = "6.0.0"
+
+[dev-dependencies]
+dylint_testing = "6.0.0"
+
+[package.metadata.rust-analyzer]
+rustc_private = true

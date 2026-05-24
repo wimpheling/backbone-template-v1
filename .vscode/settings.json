@@ -1,0 +1,23 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "always",
+    "source.format.oxc": "always"
+  },
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": false,
+  "oxc.configPath": ".oxlintrc.json",
+  "oxc.enable.oxlint": true,
+  "oxc.lint.run": "onType",
+  "oxc.path.oxlint": "client/node_modules/.bin/oxlint",
+  "oxc.requireConfig": true,
+  "oxc.tsConfigPath": "client/tsconfig.json",
+  "rust-analyzer.check.overrideCommand": [
+    "cargo",
+    "dylint",
+    "--all",
+    "--",
+    "--all-targets",
+    "--message-format=json"
+  ],
+  "rust-analyzer.rustc.source": "discover"
+}

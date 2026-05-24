@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implement Plan"
+  short_description: "Execute backbone development plans"
+  default_prompt: "Use $implement-plan to implement an approved backbone development plan."

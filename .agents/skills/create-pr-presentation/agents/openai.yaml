@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create PR Presentation"
+  short_description: "Generate Slidev PR decks"
+  default_prompt: "Use $create-pr-presentation to create a Slidev presentation for the current PR."

@@ -1,0 +1,10 @@
+warning: top-level public modules should be one of config, db, integrations, proto, rest, rpc, or state
+  --> $DIR/lib.rs:2:1
+   |
+LL | pub mod surprise {}
+   | ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(controlled_public_modules)]` on by default
+
+warning: 1 warning emitted
+

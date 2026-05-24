@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Plan"
+  short_description: "Critique backbone implementation plans"
+  default_prompt: "Use $review-plan to review a backbone implementation plan before implementation."

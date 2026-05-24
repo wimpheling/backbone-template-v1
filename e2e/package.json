@@ -1,0 +1,42 @@
+{
+  "name": "backbone-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "pnpm run test:support && playwright test",
+    "test:prepared": "pnpm run test:support:prepared && playwright test",
+    "test:browser": "playwright test",
+    "test:support": "pnpm run test:adapter && pnpm run test:oxlint-plugin",
+    "test:support:prepared": "pnpm run test:adapter && pnpm run test:oxlint-plugin:prepared",
+    "test:adapter": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test support/gherkin.test.ts",
+    "test:oxlint-plugin": "pnpm run build:oxlint-plugin && node --disable-warning=ExperimentalWarning --experimental-strip-types --test support/oxlint-plugin.test.ts",
+    "test:oxlint-plugin:prepared": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test support/oxlint-plugin.test.ts",
+    "build:oxlint-plugin": "tsc --project tsconfig.oxlint-plugin.json",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "lint": "pnpm run format:check && pnpm run lint:code && pnpm run lint:features",
+    "lint:prepared": "pnpm run format:check && pnpm run lint:code:prepared && pnpm run lint:features",
+    "lint:code": "pnpm run build:oxlint-plugin && oxlint --config .oxlintrc.json playwright.config.ts support/app-gherkin.ts support/fixtures.ts support/gherkin.ts support/gherkin.test.ts support/oxlint-plugin.ts support/oxlint-plugin.test.ts tests",
+    "lint:code:prepared": "oxlint --config .oxlintrc.json playwright.config.ts support/app-gherkin.ts support/fixtures.ts support/gherkin.ts support/gherkin.test.ts support/oxlint-plugin.ts support/oxlint-plugin.test.ts tests",
+    "lint:features": "gherkin-lint -c .gherkin-lintrc \"features/**/*.feature\"",
+    "typecheck": "tsc --noEmit",
+    "test:debug": "playwright test --max-failures=1 --headed --debug",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@cucumber/gherkin": "^39.1.0",
+    "@cucumber/messages": "^32.3.1",
+    "@playwright/test": "latest",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.9.1",
+    "better-sqlite3": "^12.10.0",
+    "gherkin-lint": "^4.2.4",
+    "oxfmt": "^0.51.0",
+    "oxlint": "^1.66.0",
+    "oxlint-tsgolint": "^0.22.1",
+    "typescript": "^6.0.3"
+  }
+}

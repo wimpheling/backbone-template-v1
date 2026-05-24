@@ -1,0 +1,5 @@
+packages:
+  - "client"
+  - "client/packages/*"
+  - "e2e"
+  - "pr-slide"

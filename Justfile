@@ -1,0 +1,140 @@
+set shell := ["bash", "-c"]
+set tempdir := "/tmp"
+varlock := "pnpm exec varlock run --no-inject-graph --"
+
+default:
+    @just --list
+
+setup:
+    pnpm install
+    pnpm --filter backbone-e2e exec playwright install chromium
+    cargo fetch
+
+generate:
+    pnpm --filter backbone-client exec buf generate --template ../buf.gen.yaml --output .. ../proto
+
+proto-lint:
+    pnpm --filter backbone-client exec buf lint ../proto
+
+server:
+    {{varlock}} cargo run -p server
+
+client:
+    {{varlock}} pnpm --filter backbone-client run dev
+
+ladle:
+    {{varlock}} pnpm --filter backbone-client run ladle
+
+pr-slide-generate:
+    pnpm --filter @backbone/pr-slide run generate
+
+pr-slide:
+    pnpm --filter @backbone/pr-slide run dev
+
+pr-slide-list:
+    pnpm --filter @backbone/pr-slide run list
+
+pr-slide-open name *args:
+    pnpm --filter @backbone/pr-slide run open -- {{name}} {{args}}
+
+client-test:
+    pnpm --filter backbone-client test
+
+rust-test:
+    cargo test --workspace
+
+rust-clippy:
+    cargo clippy --workspace --all-targets
+
+rust-lint:
+    cargo dylint --all -- --all-targets
+
+dev: generate
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    {{varlock}} cargo run -p server &
+    server_pid=$!
+
+    {{varlock}} pnpm --filter backbone-client run dev &
+    client_pid=$!
+
+    cleanup() {
+      kill "$server_pid" "$client_pid" 2>/dev/null || true
+      wait "$server_pid" "$client_pid" 2>/dev/null || true
+    }
+
+    trap cleanup EXIT INT TERM
+    wait -n "$server_pid" "$client_pid"
+
+check:
+    just proto-lint
+    just generate
+    just rust-validation-checks
+    just client-validation
+    pnpm --filter backbone-e2e run lint
+
+rust-validation-checks:
+    cargo check --workspace
+    just rust-clippy
+    just rust-lint
+
+client-validation:
+    just client-test
+    pnpm --filter backbone-client run check
+    pnpm --filter backbone-client run build
+
+full-validation:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    just proto-lint
+    just generate
+
+    just rust-validation-checks &
+    rust_checks_pid=$!
+    just rust-test &
+    rust_test_pid=$!
+    pnpm --filter @backbone/design-system-lint build
+    pnpm --filter backbone-client run test:prepared &
+    client_test_pid=$!
+    pnpm --filter backbone-client run check:prepared &
+    client_check_pid=$!
+    pnpm --filter backbone-client run build &
+    client_build_pid=$!
+    pnpm --filter backbone-e2e run build:oxlint-plugin
+    pnpm --filter backbone-e2e run lint:prepared &
+    e2e_lint_pid=$!
+    pnpm --filter backbone-e2e run test:support:prepared &
+    e2e_support_pid=$!
+
+    status=0
+    for pid in "$rust_checks_pid" "$rust_test_pid" "$client_test_pid" "$client_check_pid" "$client_build_pid" "$e2e_lint_pid" "$e2e_support_pid"; do
+      if ! wait "$pid"; then
+        status=1
+      fi
+    done
+
+    if [[ "$status" -ne 0 ]]; then
+      exit "$status"
+    fi
+
+    BACKBONE_SKIP_GENERATE=1 just e2e-browser
+
+env-check:
+    pnpm exec varlock load
+
+e2e:
+    bash scripts/run-e2e.sh pnpm --filter backbone-e2e test
+
+e2e-prepared:
+    bash scripts/run-e2e.sh pnpm --filter backbone-e2e run test:prepared
+
+e2e-browser:
+    bash scripts/run-e2e.sh pnpm --filter backbone-e2e run test:browser
+
+e2e-debug:
+    bash scripts/run-e2e.sh pnpm --filter backbone-e2e run test:debug
+
+e2e-ui:
+    bash scripts/run-e2e.sh pnpm --filter backbone-e2e run test:ui

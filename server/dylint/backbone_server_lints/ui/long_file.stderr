@@ -1,0 +1,6 @@
+warning: Rust source file has 303 lines; split files above 300 lines
+   |
+   = note: `#[warn(max_file_length)]` on by default
+
+warning: 1 warning emitted
+

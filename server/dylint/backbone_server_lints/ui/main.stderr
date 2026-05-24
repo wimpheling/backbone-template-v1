@@ -1,0 +1,85 @@
+error: Axum response error types should only be mapped in rest modules
+  --> $DIR/main.rs:24:12
+   |
+LL | use axum::{http::StatusCode, response::IntoResponse};
+   |            ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[deny(rest_errors_mapped_at_boundary)]` on by default
+
+error: Axum response error types should only be mapped in rest modules
+  --> $DIR/main.rs:24:30
+   |
+LL | use axum::{http::StatusCode, response::IntoResponse};
+   |                              ^^^^^^^^^^^^^^^^^^^^^^
+
+error: Connect RPC errors should only be mapped in rpc modules
+  --> $DIR/main.rs:25:18
+   |
+LL | use connectrpc::{ConnectError, ErrorCode};
+   |                  ^^^^^^^^^^^^
+   |
+   = note: `#[deny(rpc_errors_mapped_at_boundary)]` on by default
+
+error: Connect RPC errors should only be mapped in rpc modules
+  --> $DIR/main.rs:25:32
+   |
+LL | use connectrpc::{ConnectError, ErrorCode};
+   |                                ^^^^^^^^^
+
+error: reqwest usage should live behind integrations modules
+  --> $DIR/main.rs:26:1
+   |
+LL | use reqwest::Client;
+   | ^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[deny(no_http_client_outside_integrations)]` on by default
+
+error: RPC method implementations should be bridged from rpc/<service>/mod.rs with logic in a sibling method file
+  --> $DIR/main.rs:35:5
+   |
+LL |     fn list_tasks(&self) {}
+   |     ^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[deny(rpc_method_in_separate_file)]` on by default
+
+error: Axum endpoint handlers should live in rest modules
+  --> $DIR/main.rs:38:1
+   |
+LL | pub fn external_webhook_handler() {}
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[deny(rest_endpoint_in_rest_folder)]` on by default
+
+error: environment variable access should be centralized in config modules
+  --> $DIR/main.rs:41:13
+   |
+LL |     let _ = std::env::var("DATABASE_URL");
+   |             ^^^^^^^^^^^^^
+   |
+   = note: `#[deny(no_direct_env_var_outside_config)]` on by default
+
+error: sqlx calls are only allowed in db modules
+  --> $DIR/main.rs:45:5
+   |
+LL |     sqlx::query("SELECT 1");
+   |     ^^^^^^^^^^^
+   |
+   = note: `#[deny(sqlx_only_in_db_folder)]` on by default
+
+warning: sqlx query strings should be string literals or sqlx macros
+  --> $DIR/main.rs:48:1
+   |
+LL | / fn dynamic_rows(table: &str) {
+LL | |     sqlx::query(format!("SELECT * FROM {table}"));
+LL | | }
+   | |_^
+   |
+   = note: `#[warn(no_sql_string_construction)]` on by default
+
+error: sqlx calls are only allowed in db modules
+  --> $DIR/main.rs:49:5
+   |
+LL |     sqlx::query(format!("SELECT * FROM {table}"));
+   |     ^^^^^^^^^^^
+
+error: aborting due to 10 previous errors; 1 warning emitted
