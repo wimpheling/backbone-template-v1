@@ -1,0 +1,12 @@
+target
+node_modules
+client/dist
+client/node_modules
+e2e/node_modules
+e2e/playwright-report
+e2e/test-results
+e2e/support/dist
+.agents/pr-presentation/**/dist
+pr-slide/dist
+*.local
+backbone.sqlite

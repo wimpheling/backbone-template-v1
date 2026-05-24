@@ -1,0 +1,5 @@
+dist
+build
+node_modules
+*.local
+packages/design-system-lint/dist

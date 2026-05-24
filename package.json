@@ -1,9 +1,30 @@
 {
-  "name": "backbone",
+  "name": "create-backbone-template",
   "version": "0.1.0",
-  "private": true,
-  "packageManager": "pnpm@10.22.0",
-  "devDependencies": {
-    "varlock": "^1.2.0"
+  "description": "Create a Backbone spec-driven React and Rust web project.",
+  "type": "module",
+  "bin": {
+    "create-backbone-template": "./bin/create-backbone-template.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "template",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "pack:dry-run": "npm pack --dry-run"
+  },
+  "keywords": [
+    "backbone",
+    "template",
+    "react",
+    "rust",
+    "connectrpc"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.11"
   }
 }
