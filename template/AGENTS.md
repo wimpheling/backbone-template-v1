@@ -59,3 +59,5 @@ When the user asks you to commit here is the workflow:
 In the Rust and typescript code, env variables are always mandatory. In the exceptional case where they are optional, they will not have a default value (except empty values).
 
 When necessary env vars are not present, the apps should crash with an explicit error message.
+
+Every environment variable used by the application must be declared in both [`.env.schema`](.env.schema) and [`.env.test`](.env.test).

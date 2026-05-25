@@ -67,6 +67,9 @@ The starter keeps SQLite wired in so new features have a real persistence path
 from day one. The hello-world RPC records each submitted name in
 `hello_world_inputs`.
 
+Every environment variable used by the application must be declared in both
+[`.env.schema`](.env.schema) and [`.env.test`](.env.test).
+
 Required server environment variables:
 
 ```sh
