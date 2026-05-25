@@ -25,18 +25,6 @@ client:
 ladle:
     {{varlock}} pnpm --filter backbone-client run ladle
 
-pr-slide-generate:
-    pnpm --filter @backbone/pr-slide run generate
-
-pr-slide:
-    pnpm --filter @backbone/pr-slide run dev
-
-pr-slide-list:
-    pnpm --filter @backbone/pr-slide run list
-
-pr-slide-open name *args:
-    pnpm --filter @backbone/pr-slide run open -- {{name}} {{args}}
-
 client-test:
     pnpm --filter backbone-client test
 

@@ -2,7 +2,6 @@ packages:
   - "client"
   - "client/packages/*"
   - "e2e"
-  - "pr-slide"
 
 onlyBuiltDependencies:
   - better-sqlite3
