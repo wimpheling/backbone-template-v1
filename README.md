@@ -1,3 +1,17 @@
+# Variant: PR Slides
+
+This branch is a maintained Backbone template variant named `variant/pr-slides`.
+It layers a Slidev-based PR presentation workspace on top of the base template so
+projects can generate, watch, list, and open branch-specific review decks from
+the current Git diff.
+
+The variant adds the `template/pr-slide` package and `just` commands such as
+`pr-slide-generate`, `pr-slide`, `pr-slide-list`, and `pr-slide-open`. Generated
+decks live under `.agents/pr-presentation/<branch-name>/`.
+
+Use the `variant/<capability>` branch naming convention for long-lived alternate
+toolkit branches that are periodically rebased from `main`.
+
 # create-backbone-template
 
 Create a Backbone starter project: a rigid, spec-driven harness for building
