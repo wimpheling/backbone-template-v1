@@ -46,6 +46,8 @@ export async function runCli({
     stdout("  just setup")
     stdout("  just full-validation")
     stdout("  just dev")
+    stdout("")
+    stdout("See README.md in the generated project for the project guide.")
 
     return 0
   } catch (error) {

@@ -1,10 +1,18 @@
 import { mkdtemp, mkdir, readFile, readdir } from "node:fs/promises"
+import { execFile } from "node:child_process"
 import os from "node:os"
 import path from "node:path"
 import { test } from "node:test"
 import assert from "node:assert/strict"
+import { promisify } from "node:util"
+import { fileURLToPath } from "node:url"
 
 import { runCli } from "../src/create-backbone-template.js"
+
+const execFileAsync = promisify(execFile)
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const packageRoot = path.resolve(__dirname, "..")
+const binPath = path.join(packageRoot, "bin/create-backbone-template.js")
 
 test("creates a backbone project from the template", async () => {
   const cwd = await mkdtemp(path.join(os.tmpdir(), "backbone-create-"))
@@ -26,7 +34,11 @@ test("creates a backbone project from the template", async () => {
   const rootEntries = await readdir(targetDir)
 
   assert.equal(packageJson.name, "my-app")
-  assert.match(readme, /^# My App/m)
+  assert.match(
+    readme,
+    /^# My App\n\nReact \+ Rust ConnectRPC starter\.\n\n## Start Here\n\n```sh\njust setup\njust full-validation\njust dev\n```/m,
+  )
+  assert.match(output.join("\n"), /See README\.md in the generated project/)
   assert.ok(rootEntries.includes("client"))
   assert.ok(rootEntries.includes("server"))
   assert.ok(rootEntries.includes("e2e"))
@@ -54,4 +66,23 @@ test("refuses to create into a non-empty directory", async () => {
   assert.notEqual(status, 0)
   assert.equal(output.join("\n"), "")
   assert.match(errors.join("\n"), /Target directory is not empty/)
+})
+
+test("creates a project through the executable bin", async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "backbone-bin-"))
+
+  const { stdout, stderr } = await execFileAsync(process.execPath, [binPath, "bin-app"], {
+    cwd,
+  })
+
+  assert.equal(stderr, "")
+  assert.match(stdout, /Created bin-app in bin-app/)
+
+  const targetDir = path.join(cwd, "bin-app")
+  const packageJson = JSON.parse(await readFile(path.join(targetDir, "package.json"), "utf8"))
+  const rootEntries = await readdir(targetDir)
+
+  assert.equal(packageJson.name, "bin-app")
+  assert.ok(rootEntries.includes("README.md"))
+  assert.ok(rootEntries.includes(".gitignore"))
 })

@@ -2,6 +2,12 @@ This is backbone: an spec-driven dev UI.
 
 # Methodology
 
+# API and integration style
+
+Prefer protobuf and gRPC for service boundaries and internal APIs. New APIs should use proto definitions and gRPC by default, and agents should actively avoid introducing REST endpoints when a proto/gRPC interface is practical.
+
+REST is still allowed, but only when there is a clear need that gRPC does not satisfy. Typical valid cases are third-party integrations that require HTTP callbacks, such as webhooks, or external APIs whose protocol is fixed by another system. When adding REST, keep the scope narrow and document why REST is necessary for that endpoint.
+
 # Red/Green testing
 
 This project uses red/green testing.

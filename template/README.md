@@ -5,11 +5,12 @@ React + Rust ConnectRPC starter.
 ## Start Here
 
 ```sh
-pnpm install
-just generate
+just setup
 just full-validation
 just dev
 ```
+
+Prerequisites: Node.js with pnpm, Rust, and `just`.
 
 ## Layout
 
