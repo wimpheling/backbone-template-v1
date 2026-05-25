@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  package:
+    name: Creator package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test creator package
+        run: npm test
+
+      - name: Check npm package contents
+        run: npm pack --dry-run
+
+  template:
+    name: Template validation
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: template
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.22.0 --activate
+
+      - name: Setup Rust toolchains
+        run: |
+          rustup toolchain install 1.88.0 --profile minimal
+          rustup default 1.88.0
+          rustup toolchain install nightly-2026-04-16 --component llvm-tools-preview --component rustc-dev
+
+      - name: Install validation tools
+        run: |
+          cargo install just --locked
+          cargo install cargo-dylint dylint-link
+
+      - name: Install template dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter backbone-e2e exec playwright install --with-deps chromium
+
+      - name: Run full validation
+        run: just full-validation

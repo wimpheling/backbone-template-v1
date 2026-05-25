@@ -1,0 +1,89 @@
+name: Publish
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version to publish, without the leading v
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Verify requested version
+        run: |
+          package_version="$(node -p "require('./package.json').version")"
+
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            requested_version="${GITHUB_REF_NAME#v}"
+          else
+            requested_version="${{ inputs.version }}"
+          fi
+
+          if [[ "$package_version" != "$requested_version" ]]; then
+            echo "package.json version ($package_version) does not match requested version ($requested_version)"
+            exit 1
+          fi
+
+      - name: Test creator package
+        run: npm test
+
+      - name: Check npm package contents
+        run: npm pack --dry-run
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.22.0 --activate
+
+      - name: Setup Rust toolchains
+        working-directory: template
+        run: |
+          rustup toolchain install 1.88.0 --profile minimal
+          rustup default 1.88.0
+          rustup toolchain install nightly-2026-04-16 --component llvm-tools-preview --component rustc-dev
+
+      - name: Install validation tools
+        working-directory: template
+        run: |
+          cargo install just --locked
+          cargo install cargo-dylint dylint-link
+
+      - name: Install template dependencies
+        working-directory: template
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        working-directory: template
+        run: pnpm --filter backbone-e2e exec playwright install --with-deps chromium
+
+      - name: Run template full validation
+        working-directory: template
+        run: just full-validation
+
+      - name: Publish package
+        run: npm publish --provenance --access public

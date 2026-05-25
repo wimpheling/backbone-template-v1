@@ -2,6 +2,15 @@
 
 React + Rust ConnectRPC starter.
 
+## Start Here
+
+```sh
+pnpm install
+just generate
+just full-validation
+just dev
+```
+
 ## Layout
 
 - `client/` - React app built with Vite, pnpm workspaces, Oxlint, and Oxfmt
