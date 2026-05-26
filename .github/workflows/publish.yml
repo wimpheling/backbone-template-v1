@@ -12,7 +12,7 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -34,20 +36,46 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      - name: Verify requested version
+      - name: Prepare requested version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           package_version="$(node -p "require('./package.json').version")"
 
           if [[ "${{ github.event_name }}" == "release" ]]; then
             requested_version="${GITHUB_REF_NAME#v}"
           else
-            requested_version="${{ inputs.version }}"
+            requested_version="$INPUT_VERSION"
+
+            if [[ "${{ github.ref_type }}" != "branch" ]]; then
+              echo "Manual publishing must run from a branch."
+              exit 1
+            fi
+
+            if [[ "$requested_version" == v* ]]; then
+              echo "Enter the version without the leading v."
+              exit 1
+            fi
+
+            git fetch --tags --force
+            if git rev-parse -q --verify "refs/tags/v${requested_version}" >/dev/null; then
+              echo "Tag v${requested_version} already exists."
+              exit 1
+            fi
+
+            if [[ "$package_version" != "$requested_version" ]]; then
+              npm version "$requested_version" --no-git-tag-version
+              package_version="$(node -p "require('./package.json').version")"
+            fi
           fi
 
           if [[ "$package_version" != "$requested_version" ]]; then
             echo "package.json version ($package_version) does not match requested version ($requested_version)"
             exit 1
           fi
+
+          echo "version=$requested_version" >> "$GITHUB_OUTPUT"
 
       - name: Test creator package
         run: npm test
@@ -84,6 +112,25 @@ jobs:
       - name: Run template full validation
         working-directory: template
         run: just full-validation
+
+      - name: Commit and create GitHub release
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git diff --quiet -- package.json; then
+            git add package.json
+            git commit -m "Release v${VERSION}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+          gh release create "v${VERSION}" --title "v${VERSION}" --notes "Release v${VERSION}"
 
       - name: Publish package
         run: npm publish --provenance --access public

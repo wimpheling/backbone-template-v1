@@ -103,16 +103,15 @@ npm pack --dry-run
 
 The package is published by the `Publish` GitHub Actions workflow.
 
-For release-based publishing:
+For normal publishing, run the `Publish` workflow from GitHub Actions and enter
+the package version without the leading `v`. The workflow updates the root
+`package.json`, validates the package and template, commits the version bump,
+creates the `vX.Y.Z` GitHub release, and runs
+`npm publish --provenance --access public`.
 
-1. Bump the root `package.json` version.
-2. Commit the version bump.
-3. Create and publish a GitHub release tagged `vX.Y.Z`.
-4. The release workflow verifies the tag matches `package.json` and runs
-   `npm publish --provenance --access public`.
-
-For manual publishing, run the `Publish` workflow from GitHub Actions and enter
-the package version without the leading `v`.
+For release-based publishing, create and publish a GitHub release tagged
+`vX.Y.Z`. The release workflow verifies the tag matches `package.json` and runs
+`npm publish --provenance --access public`.
 
 The npm package should be configured for trusted publishing with:
 
