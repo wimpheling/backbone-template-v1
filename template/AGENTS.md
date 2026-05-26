@@ -61,3 +61,5 @@ In the Rust and typescript code, env variables are always mandatory. In the exce
 When necessary env vars are not present, the apps should crash with an explicit error message.
 
 Every environment variable used by the application must be declared in both [`.env.schema`](.env.schema) and [`.env.test`](.env.test).
+
+Use `.env.local` for developer-specific local values and secrets. Do not rely on `.env.local` as the only declaration for an environment variable; the variable still belongs in `.env.schema`, and test values still belong in `.env.test`.

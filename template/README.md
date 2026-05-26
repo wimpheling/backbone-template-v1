@@ -70,6 +70,10 @@ from day one. The hello-world RPC records each submitted name in
 Every environment variable used by the application must be declared in both
 [`.env.schema`](.env.schema) and [`.env.test`](.env.test).
 
+Use `.env.local` for developer-specific local values and secrets. It is ignored
+by git, but it does not replace the shared contract in `.env.schema` or the
+test values in `.env.test`.
+
 Required server environment variables:
 
 ```sh
