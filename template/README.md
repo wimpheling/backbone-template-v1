@@ -10,7 +10,18 @@ just full-validation
 just dev
 ```
 
-Prerequisites: Node.js with pnpm, Rust, and `just`.
+## Requirements
+
+- Node.js 24
+- pnpm 10.22.0; Corepack can activate the version pinned in `package.json`
+- Rust 1.95 or newer
+- `protoc`, the Protocol Buffers compiler
+- `just`
+- `cargo-dylint`, required by the custom Rust lint step in `just check` and
+  `just full-validation`
+
+`just setup` installs project dependencies, Playwright Chromium, and Rust crate
+dependencies.
 
 ## Layout
 

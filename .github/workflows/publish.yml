@@ -63,8 +63,8 @@ jobs:
       - name: Setup Rust toolchains
         working-directory: template
         run: |
-          rustup toolchain install 1.88.0 --profile minimal
-          rustup default 1.88.0
+          rustup toolchain install 1.95.0 --profile minimal
+          rustup default 1.95.0
           rustup toolchain install nightly-2026-04-16 --component llvm-tools-preview --component rustc-dev
 
       - name: Install validation tools
