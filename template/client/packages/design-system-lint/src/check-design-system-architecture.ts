@@ -8,6 +8,7 @@ const designSystemResult = checkDesignSystemArchitecture({
 })
 
 const pageResult = checkPageArchitecture({
+  appSrcFile: path.resolve("../../src/App.tsx"),
   pagesSrcDir: path.resolve("../../src/pages"),
 })
 

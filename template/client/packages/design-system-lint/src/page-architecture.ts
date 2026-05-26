@@ -3,6 +3,7 @@ import path from "node:path"
 import ts from "typescript"
 
 export type PageArchitecturePaths = {
+  appSrcFile?: string
   pagesSrcDir: string
 }
 
@@ -26,11 +27,79 @@ type PageNames = {
 export function checkPageArchitecture(paths: PageArchitecturePaths): PageArchitectureResult {
   const errors: string[] = []
 
+  if (paths.appSrcFile !== undefined) {
+    errors.push(...checkAppFile(paths.appSrcFile))
+  }
+
   for (const pageFile of findPageFiles(paths.pagesSrcDir)) {
     errors.push(...checkPageFile(pageFile))
+    errors.push(...checkPageCompanionFiles(pageFile))
   }
 
   return { errors }
+}
+
+function checkAppFile(appSrcFile: string) {
+  if (!fs.existsSync(appSrcFile)) {
+    return []
+  }
+
+  const sourceText = fs.readFileSync(appSrcFile, "utf8")
+  const sourceFile = ts.createSourceFile(
+    appSrcFile,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  )
+  const errors: string[] = []
+
+  for (const statement of sourceFile.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) {
+      continue
+    }
+
+    const moduleName = statement.moduleSpecifier.text
+
+    if (moduleName === "@backbone/design-system") {
+      errors.push(
+        'App file "App.tsx" must not import @backbone/design-system; render design-system components from page templates or app shell components.',
+      )
+    }
+
+    if (
+      moduleName === "@connectrpc/connect" ||
+      moduleName === "@connectrpc/connect-web" ||
+      moduleName === "zustand" ||
+      moduleName.startsWith("./gen/")
+    ) {
+      errors.push(
+        `App file "App.tsx" must not import "${moduleName}"; page state belongs in sibling page state files.`,
+      )
+    }
+
+    if (moduleName.startsWith("./pages/") && moduleName.endsWith("-page")) {
+      errors.push(`App file "App.tsx" must import a page route adapter instead of "${moduleName}".`)
+    }
+
+    if (
+      moduleName === "react" &&
+      statement.importClause?.namedBindings !== undefined &&
+      ts.isNamedImports(statement.importClause.namedBindings)
+    ) {
+      for (const element of statement.importClause.namedBindings.elements) {
+        const importName = element.propertyName?.text ?? element.name.text
+
+        if (["useEffect", "useMemo", "useReducer", "useState"].includes(importName)) {
+          errors.push(
+            `App file "App.tsx" must not import React hook "${importName}"; route/page state belongs in page route and state files.`,
+          )
+        }
+      }
+    }
+  }
+
+  return errors
 }
 
 function findPageFiles(pagesSrcDir: string): PageFile[] {
@@ -75,6 +144,90 @@ function checkPageFile(pageFile: PageFile) {
   return errors
 }
 
+function checkPageCompanionFiles(pageFile: PageFile) {
+  const errors: string[] = []
+  const pageDir = path.dirname(pageFile.absolutePath)
+  const routePath = path.join(pageDir, `${pageFile.pageName}-page-route.tsx`)
+  const statePath = path.join(pageDir, `${pageFile.pageName}-page-state.ts`)
+
+  if (!fs.existsSync(routePath)) {
+    errors.push(
+      `Page "${pageFile.relativePath}" must have a sibling route adapter "${pageFile.pageName}-page-route.tsx".`,
+    )
+  } else {
+    errors.push(...checkPageRouteFile(routePath, pageFile))
+  }
+
+  if (!fs.existsSync(statePath)) {
+    errors.push(
+      `Page "${pageFile.relativePath}" must have a sibling Zustand state file "${pageFile.pageName}-page-state.ts".`,
+    )
+  } else {
+    errors.push(...checkPageStateFile(statePath, pageFile))
+  }
+
+  return errors
+}
+
+function checkPageRouteFile(routePath: string, pageFile: PageFile) {
+  const sourceFile = createTsxSourceFile(routePath)
+  const relativePath = getSiblingRelativePath(routePath, pageFile)
+  const imports = getImports(sourceFile)
+  const errors: string[] = []
+
+  if (imports.includes("@backbone/design-system")) {
+    errors.push(
+      `Page route adapter "${relativePath}" must not import @backbone/design-system; keep UI composition in "${path.basename(pageFile.absolutePath)}".`,
+    )
+  }
+
+  errors.push(
+    ...checkRequiredImport(
+      imports,
+      `./${pageFile.pageName}-page`,
+      `Page route adapter "${relativePath}" must import "./${pageFile.pageName}-page".`,
+    ),
+  )
+  errors.push(
+    ...checkRequiredImport(
+      imports,
+      `./${pageFile.pageName}-page-state`,
+      `Page route adapter "${relativePath}" must import "./${pageFile.pageName}-page-state".`,
+    ),
+  )
+
+  return errors
+}
+
+function checkPageStateFile(statePath: string, pageFile: PageFile) {
+  const sourceFile = createTsSourceFile(statePath)
+  const relativePath = getSiblingRelativePath(statePath, pageFile)
+  const imports = getImports(sourceFile)
+  const errors: string[] = []
+
+  if (imports.includes("@backbone/design-system")) {
+    errors.push(
+      `Page state file "${relativePath}" must not import @backbone/design-system; keep UI composition in "${path.basename(pageFile.absolutePath)}".`,
+    )
+  }
+
+  if (imports.includes(`./${pageFile.pageName}-page`)) {
+    errors.push(
+      `Page state file "${relativePath}" must not import "./${pageFile.pageName}-page"; page state must stay independent from UI components.`,
+    )
+  }
+
+  errors.push(
+    ...checkRequiredImport(
+      imports,
+      "zustand",
+      `Page state file "${relativePath}" must import "zustand".`,
+    ),
+  )
+
+  return errors
+}
+
 function checkImports(sourceFile: ts.SourceFile, pageFile: PageFile) {
   const errors: string[] = []
 
@@ -95,6 +248,14 @@ function checkImports(sourceFile: ts.SourceFile, pageFile: PageFile) {
   }
 
   return errors
+}
+
+function checkRequiredImport(imports: string[], requiredImport: string, error: string) {
+  if (imports.includes(requiredImport)) {
+    return []
+  }
+
+  return [error]
 }
 
 function checkRequiredTypeExport(
@@ -317,6 +478,39 @@ function unwrapExpression(expression: ts.Expression | undefined): ts.Expression 
   }
 
   return expression
+}
+
+function createTsSourceFile(filePath: string) {
+  const sourceText = fs.readFileSync(filePath, "utf8")
+
+  return ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
+}
+
+function createTsxSourceFile(filePath: string) {
+  const sourceText = fs.readFileSync(filePath, "utf8")
+
+  return ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+}
+
+function getImports(sourceFile: ts.SourceFile) {
+  const imports: string[] = []
+
+  for (const statement of sourceFile.statements) {
+    if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
+      imports.push(statement.moduleSpecifier.text)
+    }
+  }
+
+  return imports
+}
+
+function getSiblingRelativePath(filePath: string, pageFile: PageFile) {
+  const pagesSrcDir = path.resolve(
+    pageFile.absolutePath,
+    ...pageFile.relativePath.split("/").map(() => ".."),
+  )
+
+  return normalizePath(path.relative(pagesSrcDir, filePath))
 }
 
 function getExpectedNames(pageName: string): PageNames {

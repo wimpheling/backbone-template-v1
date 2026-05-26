@@ -26,7 +26,8 @@
     "@connectrpc/connect-web": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-router": "^7.15.0"
+    "react-router": "^7.15.0",
+    "zustand": "latest"
   },
   "devDependencies": {
     "@backbone/design-system-lint": "workspace:*",

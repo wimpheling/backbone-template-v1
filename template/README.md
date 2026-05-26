@@ -40,6 +40,14 @@ The client is a pnpm workspace rooted at `client/`.
 - `@backbone/design-system-basic` (`client/packages/design-system-basic/`) - concrete React and CSS implementation of the design-system contract. It contains the DOM markup and styling used by the app.
 - `@backbone/design-system-lint` (`client/packages/design-system-lint/`) - custom Oxlint plugin that protects the design-system boundary by rejecting raw DOM JSX in app code and direct imports from external UI libraries.
 
+## Client Page Architecture
+
+`client/src/App.tsx` is kept as a routing shell. Page UI lives in
+`client/src/pages/<name>/<name>-page.tsx`, page behavior and async state live in
+the sibling Zustand store at `<name>-page-state.ts`, and
+`<name>-page-route.tsx` maps the store into the dumb page props. The client
+architecture lint enforces those file boundaries.
+
 ## Rust Custom Lints
 
 The server has custom Dylint rules in `server/dylint/backbone_server_lints/`.

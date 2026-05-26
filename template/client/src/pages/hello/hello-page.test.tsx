@@ -13,6 +13,8 @@ const defaultStaticProps: HelloPageStaticProps = {
   name: "World",
   nameLabel: "Name",
   namePlaceholder: "World",
+  navigationCurrentHref: "/",
+  navigationItems: [{ href: "/", label: "Hello" }],
   submitLabel: "Say hello",
   isSubmitting: false,
   error: null,
@@ -49,7 +51,10 @@ describe("HelloPage", () => {
   test("wires input and form events", () => {
     const dynamicProps = createDynamicProps()
     const element = HelloPage({ ...defaultStaticProps, ...dynamicProps })
-    const layoutProps = element.props as { middle: ReactElement }
+    const fragmentProps = element.props as { children: ReactElement[] }
+    const layout = fragmentProps.children[1]
+    assert.ok(layout)
+    const layoutProps = layout.props as { middle: ReactElement }
     const outerStack = layoutProps.middle as ElementWithProps<{
       children: ReactElement[]
     }>
