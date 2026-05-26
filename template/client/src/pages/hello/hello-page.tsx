@@ -34,48 +34,6 @@ export type HelloPageDynamicProps = {
 
 export const helloPageDynamicPropKeys = ["onNameChanged", "onSubmitted"] as const
 
-export const helloPagePreviewStates = {
-  ready: {
-    eyebrow: "Backbone",
-    title: "ConnectRPC helloworld",
-    greeting: "Hello, World!",
-    name: "World",
-    nameLabel: "Name",
-    namePlaceholder: "World",
-    navigationCurrentHref: "/",
-    navigationItems: [{ href: "/", label: "Hello" }],
-    submitLabel: "Say hello",
-    isSubmitting: false,
-    error: null,
-  },
-  calling: {
-    eyebrow: "Backbone",
-    title: "ConnectRPC helloworld",
-    greeting: "Hello, World!",
-    name: "World",
-    nameLabel: "Name",
-    namePlaceholder: "World",
-    navigationCurrentHref: "/",
-    navigationItems: [{ href: "/", label: "Hello" }],
-    submitLabel: "Calling...",
-    isSubmitting: true,
-    error: null,
-  },
-  error: {
-    eyebrow: "Backbone",
-    title: "ConnectRPC helloworld",
-    greeting: "Hello, World!",
-    name: "World",
-    nameLabel: "Name",
-    namePlaceholder: "World",
-    navigationCurrentHref: "/",
-    navigationItems: [{ href: "/", label: "Hello" }],
-    submitLabel: "Say hello",
-    isSubmitting: false,
-    error: "Request failed",
-  },
-} satisfies Record<string, HelloPageStaticProps>
-
 export type HelloPageProps = HelloPageStaticProps & HelloPageDynamicProps
 
 export const HelloPage: Page<HelloPageStaticProps, HelloPageDynamicProps> = ({

@@ -17,6 +17,8 @@ just dev
 - Rust 1.95 or newer
 - `protoc`, the Protocol Buffers compiler
 - `just`
+- `watchexec`; install with `cargo install watchexec-cli`. It is required by
+  `just dev` and `just server` to restart the Rust server on source changes
 - `cargo-dylint`, required by the custom Rust lint step in `just check` and
   `just full-validation`
 
@@ -79,6 +81,8 @@ just e2e-ui          # open Playwright UI mode
 
 The dev launcher starts the client at `http://127.0.0.1:5173` and the server at
 `http://127.0.0.1:8080`, then stops both child processes when the launcher exits.
+The client runs through Vite HMR, and the Rust server runs through `watchexec`
+so it restarts when server, Cargo, or proto files change.
 
 ## Runtime Configuration
 
