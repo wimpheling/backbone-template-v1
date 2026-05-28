@@ -1,6 +1,6 @@
 {
   "name": "create-backbone-template",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Create a Backbone spec-driven React and Rust web project.",
   "type": "module",
   "bin": {
