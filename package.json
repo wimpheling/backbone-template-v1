@@ -8,7 +8,7 @@
     "url": "git+https://github.com/wimpheling/backbone-template-v1.git"
   },
   "bin": {
-    "create-backbone-template": "./bin/create-backbone-template.js"
+    "create-backbone-template": "bin/create-backbone-template.js"
   },
   "files": [
     "bin",
