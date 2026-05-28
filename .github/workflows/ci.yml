@@ -63,6 +63,7 @@ jobs:
         run: |
           cargo install just --locked
           cargo install cargo-dylint dylint-link
+          cargo install watchexec-cli --locked
 
       - name: Install template dependencies
         run: pnpm install --frozen-lockfile
