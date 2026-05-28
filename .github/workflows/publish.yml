@@ -50,6 +50,11 @@ jobs:
 
           if [[ "${{ github.event_name }}" == "release" ]]; then
             requested_version="${GITHUB_REF_NAME#v}"
+
+            if [[ "$GITHUB_REF_NAME" != v* ]]; then
+              echo "Release tags must start with v."
+              exit 1
+            fi
           else
             requested_version="$INPUT_VERSION"
 
@@ -68,11 +73,11 @@ jobs:
               echo "Tag v${requested_version} already exists."
               exit 1
             fi
+          fi
 
-            if [[ "$package_version" != "$requested_version" ]]; then
-              npm version "$requested_version" --no-git-tag-version
-              package_version="$(node -p "require('./package.json').version")"
-            fi
+          if [[ "$package_version" != "$requested_version" ]]; then
+            npm version "$requested_version" --no-git-tag-version
+            package_version="$(node -p "require('./package.json').version")"
           fi
 
           if [[ "$package_version" != "$requested_version" ]]; then
@@ -118,6 +123,29 @@ jobs:
       - name: Run template full validation
         working-directory: template
         run: just full-validation
+
+      - name: Commit release version to main
+        if: github.event_name == 'release'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- package.json; then
+            echo "package.json already matches v${VERSION}; nothing to commit."
+            exit 0
+          fi
+
+          git fetch origin main
+          if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
+            echo "Release tag must point at the current main commit before the version can be pushed."
+            exit 1
+          fi
+
+          git add package.json
+          git commit -m "Release v${VERSION}"
+          git push origin "HEAD:main"
 
       - name: Commit and create GitHub release
         if: github.event_name == 'workflow_dispatch'
