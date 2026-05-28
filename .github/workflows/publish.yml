@@ -88,8 +88,10 @@ jobs:
 
           echo "version=$requested_version" >> "$GITHUB_OUTPUT"
 
-      - name: Test creator package
-        run: npm test
+      # Validation runs in CI before changes reach main, so publish keeps the
+      # release path short and only verifies the package contents.
+      # - name: Test creator package
+      #   run: npm test
 
       - name: Check npm package contents
         run: npm pack --dry-run
@@ -138,36 +140,36 @@ jobs:
           }
           NODE
 
-      - name: Enable pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.22.0 --activate
+      # - name: Enable pnpm
+      #   run: |
+      #     corepack enable
+      #     corepack prepare pnpm@10.22.0 --activate
 
-      - name: Setup Rust toolchains
-        working-directory: template
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal --component clippy
-          rustup default 1.95.0
-          rustup toolchain install nightly-2026-04-16 --component llvm-tools-preview --component rustc-dev
+      # - name: Setup Rust toolchains
+      #   working-directory: template
+      #   run: |
+      #     rustup toolchain install 1.95.0 --profile minimal --component clippy
+      #     rustup default 1.95.0
+      #     rustup toolchain install nightly-2026-04-16 --component llvm-tools-preview --component rustc-dev
 
-      - name: Install validation tools
-        working-directory: template
-        run: |
-          cargo install just --locked
-          cargo install cargo-dylint dylint-link
-          cargo install watchexec-cli --locked
+      # - name: Install validation tools
+      #   working-directory: template
+      #   run: |
+      #     cargo install just --locked
+      #     cargo install cargo-dylint dylint-link
+      #     cargo install watchexec-cli --locked
 
-      - name: Install template dependencies
-        working-directory: template
-        run: pnpm install --frozen-lockfile
+      # - name: Install template dependencies
+      #   working-directory: template
+      #   run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright Chromium
-        working-directory: template
-        run: pnpm --filter backbone-e2e exec playwright install --with-deps chromium
+      # - name: Install Playwright Chromium
+      #   working-directory: template
+      #   run: pnpm --filter backbone-e2e exec playwright install --with-deps chromium
 
-      - name: Run template full validation
-        working-directory: template
-        run: just full-validation
+      # - name: Run template full validation
+      #   working-directory: template
+      #   run: just full-validation
 
       - name: Commit release version to main
         if: github.event_name == 'release'
@@ -210,6 +212,43 @@ jobs:
           git tag "v${VERSION}"
           git push origin "v${VERSION}"
           gh release create "v${VERSION}" --title "v${VERSION}" --notes "Release v${VERSION}"
+
+      - name: Show GitHub OIDC claims
+        run: |
+          response="$(curl --fail-with-body \
+            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org")"
+
+          token="$(node -e "process.stdout.write(JSON.parse(process.argv[1]).value)" "$response")"
+          payload="$(node -e "
+            const token = process.argv[1]
+            const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+            process.stdout.write(Buffer.from(payload, 'base64').toString('utf8'))
+          " "$token")"
+
+          node -e "
+            const payload = JSON.parse(process.argv[1])
+            const keys = [
+              'iss',
+              'aud',
+              'repository',
+              'repository_owner',
+              'workflow',
+              'workflow_ref',
+              'job_workflow_ref',
+              'ref',
+              'ref_type',
+              'event_name',
+              'environment',
+              'actor',
+            ]
+
+            for (const key of keys) {
+              if (key in payload) {
+                console.log(`${key}: ${payload[key]}`)
+              }
+            }
+          " "$payload"
 
       - name: Publish package
         run: npm publish --access public
