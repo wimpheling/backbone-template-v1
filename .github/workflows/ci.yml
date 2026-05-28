@@ -55,7 +55,7 @@ jobs:
 
       - name: Setup Rust toolchains
         run: |
-          rustup toolchain install 1.95.0 --profile minimal
+          rustup toolchain install 1.95.0 --profile minimal --component clippy
           rustup default 1.95.0
           rustup toolchain install nightly-2026-04-16 --component llvm-tools-preview --component rustc-dev
 
@@ -63,6 +63,7 @@ jobs:
         run: |
           cargo install just --locked
           cargo install cargo-dylint dylint-link
+          cargo install watchexec-cli --locked
 
       - name: Install template dependencies
         run: pnpm install --frozen-lockfile

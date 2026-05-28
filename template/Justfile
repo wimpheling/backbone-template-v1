@@ -1,6 +1,7 @@
 set shell := ["bash", "-c"]
 set tempdir := "/tmp"
 varlock := "pnpm exec varlock run --no-inject-graph --"
+server_watch := "watchexec -r -e rs,toml,sql,proto --watch server --watch proto --watch Cargo.toml --watch Cargo.lock -- cargo run -p server"
 
 default:
     @just --list
@@ -17,7 +18,7 @@ proto-lint:
     pnpm --filter backbone-client exec buf lint ../proto
 
 server:
-    {{varlock}} cargo run -p server
+    {{varlock}} {{server_watch}}
 
 client:
     {{varlock}} pnpm --filter backbone-client run dev
@@ -41,7 +42,7 @@ dev: generate
     #!/usr/bin/env bash
     set -euo pipefail
 
-    {{varlock}} cargo run -p server &
+    {{varlock}} {{server_watch}} &
     server_pid=$!
 
     {{varlock}} pnpm --filter backbone-client run dev &

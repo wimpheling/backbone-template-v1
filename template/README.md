@@ -17,6 +17,8 @@ just dev
 - Rust 1.95 or newer
 - `protoc`, the Protocol Buffers compiler
 - `just`
+- `watchexec`; install with `cargo install watchexec-cli`. It is required by
+  `just dev` and `just server` to restart the Rust server on source changes
 - `cargo-dylint`, required by the custom Rust lint step in `just check` and
   `just full-validation`
 
@@ -39,6 +41,14 @@ The client is a pnpm workspace rooted at `client/`.
 - `@backbone/design-system-contract` (`client/packages/design-system-contract/`) - type-only contract for supported UI primitives, including layout, stack, inline, text, headings, form fields, inputs, buttons, and notices.
 - `@backbone/design-system-basic` (`client/packages/design-system-basic/`) - concrete React and CSS implementation of the design-system contract. It contains the DOM markup and styling used by the app.
 - `@backbone/design-system-lint` (`client/packages/design-system-lint/`) - custom Oxlint plugin that protects the design-system boundary by rejecting raw DOM JSX in app code and direct imports from external UI libraries.
+
+## Client Page Architecture
+
+`client/src/App.tsx` is kept as a routing shell. Page UI lives in
+`client/src/pages/<name>/<name>-page.tsx`, page behavior and async state live in
+the sibling Zustand store at `<name>-page-state.ts`, and
+`<name>-page-route.tsx` maps the store into the dumb page props. The client
+architecture lint enforces those file boundaries.
 
 ## Rust Custom Lints
 
@@ -71,6 +81,8 @@ just e2e-ui          # open Playwright UI mode
 
 The dev launcher starts the client at `http://127.0.0.1:5173` and the server at
 `http://127.0.0.1:8080`, then stops both child processes when the launcher exits.
+The client runs through Vite HMR, and the Rust server runs through `watchexec`
+so it restarts when server, Cargo, or proto files change.
 
 ## Runtime Configuration
 
