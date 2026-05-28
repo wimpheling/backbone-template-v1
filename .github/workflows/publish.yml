@@ -251,4 +251,4 @@ jobs:
           " "$payload"
 
       - name: Publish package
-        run: npm publish --access public
+        run: npm publish --provenance --access public
