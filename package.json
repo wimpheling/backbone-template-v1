@@ -3,6 +3,10 @@
   "version": "0.1.2",
   "description": "Create a Backbone spec-driven React and Rust web project.",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wimpheling/backbone-template-v1.git"
+  },
   "bin": {
     "create-backbone-template": "./bin/create-backbone-template.js"
   },
