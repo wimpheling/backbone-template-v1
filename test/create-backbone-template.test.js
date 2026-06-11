@@ -181,6 +181,159 @@ test("creates a project through the executable bin", async () => {
   assert.ok(rootEntries.includes(".gitignore"))
 })
 
+test("generated project extracts the expected app spec json", async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "backbone-spec-"))
+  const output = []
+  const errors = []
+  const status = await runCli({
+    args: ["spec-app"],
+    cwd,
+    stderr: (message) => errors.push(message),
+    stdout: (message) => output.push(message),
+  })
+
+  assert.equal(status, 0, errors.join("\n"))
+
+  const targetDir = path.join(cwd, "spec-app")
+
+  await execFileAsync(
+    "cargo",
+    [
+      "run",
+      "-p",
+      "spec-engine",
+      "--bin",
+      "spec-extractor",
+      "--",
+      "--project-root",
+      ".",
+      "--out",
+      "spec/app-spec.json",
+    ],
+    {
+      cwd: targetDir,
+      env: {
+        ...process.env,
+        CARGO_TARGET_DIR: path.join(cwd, "cargo-target"),
+      },
+      maxBuffer: 10 * 1024 * 1024,
+    },
+  )
+
+  const spec = JSON.parse(await readFile(path.join(targetDir, "spec/app-spec.json"), "utf8"))
+
+  assert.deepEqual(spec, {
+    schemaVersion: 1,
+    app: {
+      name: "spec-app",
+    },
+    client: {
+      components: [
+        {
+          name: "Button",
+          stories: [
+            story("Primary", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("Secondary", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("Danger", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("DisabledPrimary", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("DisabledSecondary", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("DisabledDanger", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("LoadingPrimary", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("LoadingSecondary", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("LoadingDanger", "client/packages/design-system-basic/src/button.stories.tsx"),
+            story("AllVariants", "client/packages/design-system-basic/src/button.stories.tsx"),
+          ],
+        },
+        {
+          name: "EmptyState",
+          stories: [
+            story("WithoutAction", "client/packages/design-system-basic/src/empty-state.stories.tsx"),
+            story("WithAction", "client/packages/design-system-basic/src/empty-state.stories.tsx"),
+          ],
+        },
+        {
+          name: "Form",
+          stories: [story("Default", "client/packages/design-system-basic/src/form.stories.tsx")],
+        },
+        {
+          name: "FormField",
+          stories: [
+            story("Default", "client/packages/design-system-basic/src/form-field.stories.tsx"),
+          ],
+        },
+        {
+          name: "Heading",
+          stories: [
+            story("Default", "client/packages/design-system-basic/src/heading.stories.tsx"),
+          ],
+        },
+        {
+          name: "Inline",
+          stories: [story("Default", "client/packages/design-system-basic/src/inline.stories.tsx")],
+        },
+        {
+          name: "Layout",
+          stories: [story("Default", "client/packages/design-system-basic/src/layout.stories.tsx")],
+        },
+        {
+          name: "Loader",
+          stories: [story("Default", "client/packages/design-system-basic/src/loader.stories.tsx")],
+        },
+        {
+          name: "Navigation",
+          stories: [
+            story("Default", "client/packages/design-system-basic/src/navigation.stories.tsx"),
+          ],
+        },
+        {
+          name: "Notice",
+          stories: [story("Default", "client/packages/design-system-basic/src/notice.stories.tsx")],
+        },
+        {
+          name: "Stack",
+          stories: [story("Default", "client/packages/design-system-basic/src/stack.stories.tsx")],
+        },
+        {
+          name: "Text",
+          stories: [story("Default", "client/packages/design-system-basic/src/text.stories.tsx")],
+        },
+        {
+          name: "TextInput",
+          stories: [
+            story("Default", "client/packages/design-system-basic/src/text-input.stories.tsx"),
+          ],
+        },
+      ],
+      pages: [
+        {
+          id: "hello",
+          name: "HelloPage",
+          routePath: "/",
+          components: [
+            node("Navigation"),
+            node("Layout", [
+              node("Stack", [
+                node("Stack", [node("Text"), node("Heading"), node("Text")]),
+                node("Form", [
+                  node("FormField", [
+                    node("Inline", [node("TextInput"), node("Button")]),
+                  ]),
+                ]),
+                node("Notice"),
+              ]),
+            ]),
+          ],
+          stories: [
+            story("Ready", "client/src/pages/hello/hello-page.stories.tsx"),
+            story("Calling", "client/src/pages/hello/hello-page.stories.tsx"),
+            story("Error", "client/src/pages/hello/hello-page.stories.tsx"),
+          ],
+        },
+      ],
+    },
+  })
+})
+
 async function findMatchingGeneratedText(rootDir, pattern) {
   const matches = []
 
@@ -223,4 +376,12 @@ function isGeneratedTextFile(filename) {
     !filename.endsWith(".jpeg") &&
     !filename.endsWith(".webp")
   )
+}
+
+function node(name, children = undefined) {
+  return children === undefined ? { name } : { name, children }
+}
+
+function story(name, file) {
+  return { name, file }
 }

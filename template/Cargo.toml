@@ -1,5 +1,5 @@
 [workspace]
-members = ["server"]
+members = ["server", "spec-engine"]
 resolver = "3"
 
 [workspace.package]
