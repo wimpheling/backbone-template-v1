@@ -162,18 +162,124 @@ function isIgnoredTemplatePath(relativePath) {
 }
 
 async function personalizeProject(targetDir, projectName) {
+  const projectNames = projectNamesFromPackageName(projectName)
+
+  await renameProjectPaths(targetDir, projectNames)
+  await replaceProjectTokens(targetDir, projectNames)
+
   const packageJsonPath = path.join(targetDir, "package.json")
   const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"))
 
   packageJson.name = projectName
 
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
+}
 
-  const readmePath = path.join(targetDir, "README.md")
-  const readme = await readFile(readmePath, "utf8")
-  const title = projectTitleFromName(projectName)
+async function renameProjectPaths(targetDir, projectNames) {
+  const lintDir = path.join(targetDir, "server/dylint/backbone_server_lints")
+  const renamedLintDir = path.join(targetDir, `server/dylint/${projectNames.snake}_server_lints`)
 
-  await writeFile(readmePath, readme.replace(/^# Backbone$/m, `# ${title}`))
+  try {
+    await rename(lintDir, renamedLintDir)
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      return
+    }
+
+    throw error
+  }
+}
+
+async function replaceProjectTokens(targetDir, projectNames) {
+  const replacements = [
+    ["BACKBONE_SKIP_GENERATE", `${projectNames.constant}_SKIP_GENERATE`],
+    ["BackboneServerLints", `${projectNames.pascal}ServerLints`],
+    ["backbone_server_lints", `${projectNames.snake}_server_lints`],
+    ["@backbone/design-system-contract", `${projectNames.scope}/design-system-contract`],
+    ["@backbone/design-system-basic", `${projectNames.scope}/design-system-basic`],
+    ["@backbone/design-system-lint", `${projectNames.scope}/design-system-lint`],
+    ["@backbone/design-system", `${projectNames.scope}/design-system`],
+    ["backbone-design-system", `${projectNames.packageName}-design-system`],
+    ["backbone-gherkin-adapter", `${projectNames.packageName}-gherkin-adapter`],
+    ["backbone-page-architecture", `${projectNames.packageName}-page-architecture`],
+    ["backbone-client", `${projectNames.packageName}-client`],
+    ["backbone-e2e", `${projectNames.packageName}-e2e`],
+    ["backbone-test.sqlite", `${projectNames.packageName}-test.sqlite`],
+    ["backbone.sqlite", `${projectNames.packageName}.sqlite`],
+  ]
+  const titleReplacements = [
+    ["Backbone", projectNames.title],
+    ["backbone", projectNames.packageName],
+  ]
+
+  for (const filePath of await listTemplateFiles(targetDir)) {
+    const source = await readFile(filePath, "utf8")
+    let updated = source
+
+    for (const [oldValue, newValue] of replacements) {
+      updated = updated.replaceAll(oldValue, newValue)
+    }
+
+    if (isHumanFacingTemplateFile(targetDir, filePath)) {
+      for (const [oldValue, newValue] of titleReplacements) {
+        updated = updated.replaceAll(oldValue, newValue)
+      }
+    }
+
+    if (updated !== source) {
+      await writeFile(filePath, updated)
+    }
+  }
+}
+
+async function listTemplateFiles(rootDir) {
+  const entries = await readdir(rootDir, { withFileTypes: true })
+  const files = []
+
+  for (const entry of entries) {
+    const entryPath = path.join(rootDir, entry.name)
+
+    if (entry.isDirectory()) {
+      files.push(...(await listTemplateFiles(entryPath)))
+      continue
+    }
+
+    if (entry.isFile() && isTextTemplateFile(entry.name)) {
+      files.push(entryPath)
+    }
+  }
+
+  return files
+}
+
+function isTextTemplateFile(filename) {
+  return (
+    !filename.endsWith(".sqlite") &&
+    !filename.endsWith(".png") &&
+    !filename.endsWith(".jpg") &&
+    !filename.endsWith(".jpeg") &&
+    !filename.endsWith(".webp")
+  )
+}
+
+function isHumanFacingTemplateFile(targetDir, filePath) {
+  const relativePath = normalizePath(path.relative(targetDir, filePath))
+
+  return (
+    relativePath === "AGENTS.md" ||
+    relativePath === "README.md" ||
+    relativePath === "client/README.md" ||
+    relativePath === "client/index.html" ||
+    relativePath.startsWith(".agents/") ||
+    /^server\/dylint\/[^/]+_server_lints\/README\.md$/.test(relativePath) ||
+    relativePath.endsWith(".stories.tsx") ||
+    relativePath.endsWith("/hello-page-route.tsx") ||
+    relativePath.endsWith("/hello-page.test.tsx")
+  )
+}
+
+function normalizePath(value) {
+  return value.split(path.sep).join("/")
 }
 
 function packageNameFromTarget(targetDir) {
@@ -189,12 +295,21 @@ function packageNameFromTarget(targetDir) {
   return normalized || "backbone-app"
 }
 
-function projectTitleFromName(projectName) {
-  return projectName
-    .split("-")
-    .filter(Boolean)
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(" ")
+function projectNamesFromPackageName(packageName) {
+  const parts = packageName.split(/[^a-z0-9]+/).filter(Boolean)
+  const title = parts.map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`).join(" ")
+  const pascal = parts.map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`).join("")
+  const snake = packageName.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "")
+  const constant = snake.toUpperCase()
+
+  return {
+    constant,
+    packageName,
+    pascal,
+    scope: `@${packageName}`,
+    snake,
+    title,
+  }
 }
 
 function shellPath(value) {
