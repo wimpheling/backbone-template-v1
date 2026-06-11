@@ -2,6 +2,22 @@ syntax = "proto3";
 
 package helloworld.v1;
 
+enum AppErrorReason {
+  APP_ERROR_REASON_UNSPECIFIED = 0;
+  APP_ERROR_REASON_INVALID_ARGUMENT = 1;
+}
+
+message AppErrorParam {
+  string key = 1;
+  string value = 2;
+}
+
+message AppErrorDetail {
+  AppErrorReason reason = 1;
+  repeated AppErrorParam params = 2;
+  string translation_key = 3;
+}
+
 service GreeterService {
   rpc SayHello(SayHelloRequest) returns (SayHelloResponse);
 }

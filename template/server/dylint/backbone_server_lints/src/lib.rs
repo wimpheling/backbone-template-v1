@@ -120,6 +120,21 @@ declare_lint! {
 declare_lint! {
     /// ### What it does
     ///
+    /// Warns when RPC code constructs `ConnectError` outside the central
+    /// app-error adapter.
+    ///
+    /// ### Why is this bad?
+    ///
+    /// User-facing RPC failures must carry structured app error reasons so the
+    /// client can handle them without parsing backend message strings.
+    pub NO_DIRECT_CONNECT_ERROR_CONSTRUCTION,
+    Deny,
+    "ConnectError should only be constructed by the app-error adapter"
+}
+
+declare_lint! {
+    /// ### What it does
+    ///
     /// Warns when Axum response error types are used outside REST modules.
     ///
     /// ### Why is this bad?
@@ -170,6 +185,7 @@ pub fn register_lints(sess: &Session, lint_store: &mut LintStore) {
         REST_ENDPOINT_IN_REST_FOLDER,
         NO_HTTP_CLIENT_OUTSIDE_INTEGRATIONS,
         RPC_ERRORS_MAPPED_AT_BOUNDARY,
+        NO_DIRECT_CONNECT_ERROR_CONSTRUCTION,
         REST_ERRORS_MAPPED_AT_BOUNDARY,
         NO_SQL_STRING_CONSTRUCTION,
         CONTROLLED_PUBLIC_MODULES,
@@ -190,6 +206,7 @@ impl_lint_pass!(BackboneServerLints => [
     REST_ENDPOINT_IN_REST_FOLDER,
     NO_HTTP_CLIENT_OUTSIDE_INTEGRATIONS,
     RPC_ERRORS_MAPPED_AT_BOUNDARY,
+    NO_DIRECT_CONNECT_ERROR_CONSTRUCTION,
     REST_ERRORS_MAPPED_AT_BOUNDARY,
     NO_SQL_STRING_CONSTRUCTION,
     CONTROLLED_PUBLIC_MODULES,
@@ -326,6 +343,15 @@ impl<'tcx> LateLintPass<'tcx> for BackboneServerLints {
                     "sqlx query strings should be string literals or sqlx macros",
                 );
             }
+
+            if is_connect_error_constructor(cx, callee) && !is_app_error_module(cx, expr.span) {
+                span_lint(
+                    cx,
+                    NO_DIRECT_CONNECT_ERROR_CONSTRUCTION,
+                    expr.span,
+                    "ConnectError construction should go through rpc/app_error.rs so user-visible RPC errors are structured",
+                );
+            }
         }
     }
 }
@@ -413,12 +439,12 @@ fn check_boundary_path(cx: &LateContext<'_>, span: Span, segments: &[String]) {
         );
     }
 
-    if is_connect_error_path(segments) && !is_in_dir(cx, span, "rpc") {
+    if is_connect_error_path(segments) && !is_allowed_connect_error_path(cx, span) {
         span_lint(
             cx,
             RPC_ERRORS_MAPPED_AT_BOUNDARY,
             span,
-            "Connect RPC errors should only be mapped in rpc modules",
+            "Connect RPC errors should only be mapped in rpc/app_error.rs or service bridge modules",
         );
     }
 
@@ -468,6 +494,29 @@ fn is_sqlx_query_callee(cx: &LateContext<'_>, callee: &Expr<'_>) -> bool {
         let snippet = snippet.trim_start();
         snippet.starts_with("sqlx::query")
     })
+}
+
+fn is_connect_error_constructor(cx: &LateContext<'_>, callee: &Expr<'_>) -> bool {
+    if span_snippet(cx, callee.span).is_some_and(|snippet| {
+        let snippet = snippet.trim_start();
+        snippet.starts_with("ConnectError::") || snippet.starts_with("connectrpc::ConnectError::")
+    }) {
+        return true;
+    }
+
+    let ExprKind::Path(qpath) = callee.kind else {
+        return false;
+    };
+
+    cx.typeck_results()
+        .qpath_res(&qpath, callee.hir_id)
+        .opt_def_id()
+        .or_else(|| cx.typeck_results().type_dependent_def_id(callee.hir_id))
+        .is_some_and(|def_id| {
+            let path = cx.tcx.def_path_str(def_id);
+
+            path.contains("connectrpc") && path.contains("ConnectError") && path.ends_with("::new")
+        })
 }
 
 fn is_dynamic_sql_expr(cx: &LateContext<'_>, call: &Expr<'_>, _sql: Option<&Expr<'_>>) -> bool {
@@ -530,6 +579,28 @@ fn is_in_config(cx: &LateContext<'_>, span: Span) -> bool {
     let path = span_path(cx, span);
 
     path.ends_with("/config.rs") || has_path_component(&path, "config")
+}
+
+fn is_app_error_module(cx: &LateContext<'_>, span: Span) -> bool {
+    span_path(cx, span).ends_with("/rpc/app_error.rs")
+}
+
+fn is_allowed_connect_error_path(cx: &LateContext<'_>, span: Span) -> bool {
+    let path = span_path(cx, span);
+
+    path.ends_with("/rpc/app_error.rs")
+        || path.ends_with("/rpc/mod.rs")
+        || path.ends_with("_tests.rs")
+        || is_rpc_service_bridge_path(&path)
+}
+
+fn is_rpc_service_bridge_path(path: &str) -> bool {
+    let path = Path::new(path);
+    path.file_name().is_some_and(|name| name == "mod.rs")
+        && path
+            .parent()
+            .and_then(Path::parent)
+            .is_some_and(|parent| parent.ends_with("rpc"))
 }
 
 fn span_snippet(cx: &LateContext<'_>, span: Span) -> Option<String> {

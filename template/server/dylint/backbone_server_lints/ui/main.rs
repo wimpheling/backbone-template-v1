@@ -9,6 +9,12 @@ mod reqwest {
 mod connectrpc {
     pub struct ConnectError;
     pub struct ErrorCode;
+
+    impl ConnectError {
+        pub fn new(_code: ErrorCode, _message: &str) -> Self {
+            Self
+        }
+    }
 }
 
 mod axum {
@@ -54,6 +60,7 @@ fn main() {
     list_rows();
     dynamic_rows("tasks");
     let _ = (Client, ConnectError, ErrorCode, StatusCode);
+    let _ = ConnectError::new(ErrorCode, "debug detail");
     let service = TasksRpcService;
     service.list_tasks();
 }

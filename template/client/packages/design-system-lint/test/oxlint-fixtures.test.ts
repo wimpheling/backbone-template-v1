@@ -60,6 +60,13 @@ test("fixture files with boundary violations report stable diagnostics", () => {
           "Raw JSX element <button> is not allowed in app code; use @backbone/design-system components.",
       },
       {
+        code: "backbone-design-system/no-raw-error-message",
+        column: 18,
+        file: "raw-error-message.ts",
+        line: 5,
+        message: "Use the RPC error mapper instead of direct Error.message access.",
+      },
+      {
         code: "backbone-design-system/no-external-ui-imports",
         column: 20,
         file: "two-violations.tsx",
@@ -119,6 +126,7 @@ function writeOxlintConfig() {
       rules: {
         "backbone-design-system/no-external-ui-imports": "error",
         "backbone-design-system/no-raw-dom-jsx": "error",
+        "backbone-design-system/no-raw-error-message": "error",
       },
     }),
   )
