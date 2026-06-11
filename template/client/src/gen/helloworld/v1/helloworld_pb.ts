@@ -2,15 +2,64 @@
 // @generated from file helloworld/v1/helloworld.proto (package helloworld.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file helloworld/v1/helloworld.proto.
  */
 export const file_helloworld_v1_helloworld: GenFile = /*@__PURE__*/
-  fileDesc("Ch5oZWxsb3dvcmxkL3YxL2hlbGxvd29ybGQucHJvdG8SDWhlbGxvd29ybGQudjEiHwoPU2F5SGVsbG9SZXF1ZXN0EgwKBG5hbWUYASABKAkiJAoQU2F5SGVsbG9SZXNwb25zZRIQCghncmVldGluZxgBIAEoCTJdCg5HcmVldGVyU2VydmljZRJLCghTYXlIZWxsbxIeLmhlbGxvd29ybGQudjEuU2F5SGVsbG9SZXF1ZXN0Gh8uaGVsbG93b3JsZC52MS5TYXlIZWxsb1Jlc3BvbnNlYgZwcm90bzM");
+  fileDesc("Ch5oZWxsb3dvcmxkL3YxL2hlbGxvd29ybGQucHJvdG8SDWhlbGxvd29ybGQudjEiKwoNQXBwRXJyb3JQYXJhbRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAkihgEKDkFwcEVycm9yRGV0YWlsEi0KBnJlYXNvbhgBIAEoDjIdLmhlbGxvd29ybGQudjEuQXBwRXJyb3JSZWFzb24SLAoGcGFyYW1zGAIgAygLMhwuaGVsbG93b3JsZC52MS5BcHBFcnJvclBhcmFtEhcKD3RyYW5zbGF0aW9uX2tleRgDIAEoCSIfCg9TYXlIZWxsb1JlcXVlc3QSDAoEbmFtZRgBIAEoCSIkChBTYXlIZWxsb1Jlc3BvbnNlEhAKCGdyZWV0aW5nGAEgASgJKlkKDkFwcEVycm9yUmVhc29uEiAKHEFQUF9FUlJPUl9SRUFTT05fVU5TUEVDSUZJRUQQABIlCiFBUFBfRVJST1JfUkVBU09OX0lOVkFMSURfQVJHVU1FTlQQATJdCg5HcmVldGVyU2VydmljZRJLCghTYXlIZWxsbxIeLmhlbGxvd29ybGQudjEuU2F5SGVsbG9SZXF1ZXN0Gh8uaGVsbG93b3JsZC52MS5TYXlIZWxsb1Jlc3BvbnNlYgZwcm90bzM");
+
+/**
+ * @generated from message helloworld.v1.AppErrorParam
+ */
+export type AppErrorParam = Message<"helloworld.v1.AppErrorParam"> & {
+  /**
+   * @generated from field: string key = 1;
+   */
+  key: string;
+
+  /**
+   * @generated from field: string value = 2;
+   */
+  value: string;
+};
+
+/**
+ * Describes the message helloworld.v1.AppErrorParam.
+ * Use `create(AppErrorParamSchema)` to create a new message.
+ */
+export const AppErrorParamSchema: GenMessage<AppErrorParam> = /*@__PURE__*/
+  messageDesc(file_helloworld_v1_helloworld, 0);
+
+/**
+ * @generated from message helloworld.v1.AppErrorDetail
+ */
+export type AppErrorDetail = Message<"helloworld.v1.AppErrorDetail"> & {
+  /**
+   * @generated from field: helloworld.v1.AppErrorReason reason = 1;
+   */
+  reason: AppErrorReason;
+
+  /**
+   * @generated from field: repeated helloworld.v1.AppErrorParam params = 2;
+   */
+  params: AppErrorParam[];
+
+  /**
+   * @generated from field: string translation_key = 3;
+   */
+  translationKey: string;
+};
+
+/**
+ * Describes the message helloworld.v1.AppErrorDetail.
+ * Use `create(AppErrorDetailSchema)` to create a new message.
+ */
+export const AppErrorDetailSchema: GenMessage<AppErrorDetail> = /*@__PURE__*/
+  messageDesc(file_helloworld_v1_helloworld, 1);
 
 /**
  * @generated from message helloworld.v1.SayHelloRequest
@@ -27,7 +76,7 @@ export type SayHelloRequest = Message<"helloworld.v1.SayHelloRequest"> & {
  * Use `create(SayHelloRequestSchema)` to create a new message.
  */
 export const SayHelloRequestSchema: GenMessage<SayHelloRequest> = /*@__PURE__*/
-  messageDesc(file_helloworld_v1_helloworld, 0);
+  messageDesc(file_helloworld_v1_helloworld, 2);
 
 /**
  * @generated from message helloworld.v1.SayHelloResponse
@@ -44,7 +93,28 @@ export type SayHelloResponse = Message<"helloworld.v1.SayHelloResponse"> & {
  * Use `create(SayHelloResponseSchema)` to create a new message.
  */
 export const SayHelloResponseSchema: GenMessage<SayHelloResponse> = /*@__PURE__*/
-  messageDesc(file_helloworld_v1_helloworld, 1);
+  messageDesc(file_helloworld_v1_helloworld, 3);
+
+/**
+ * @generated from enum helloworld.v1.AppErrorReason
+ */
+export enum AppErrorReason {
+  /**
+   * @generated from enum value: APP_ERROR_REASON_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: APP_ERROR_REASON_INVALID_ARGUMENT = 1;
+   */
+  INVALID_ARGUMENT = 1,
+}
+
+/**
+ * Describes the enum helloworld.v1.AppErrorReason.
+ */
+export const AppErrorReasonSchema: GenEnum<AppErrorReason> = /*@__PURE__*/
+  enumDesc(file_helloworld_v1_helloworld, 0);
 
 /**
  * @generated from service helloworld.v1.GreeterService

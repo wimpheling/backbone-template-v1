@@ -17,6 +17,24 @@ type JsxOpeningElementNode = {
   name?: JsxNameNode
 }
 
+type MemberExpressionNode = {
+  object?: {
+    name?: string
+    type?: string
+  }
+  property?: {
+    name?: string
+    type?: string
+  }
+}
+
+type CatchClauseNode = {
+  param?: {
+    name?: string
+    type?: string
+  }
+}
+
 type RuleModule<VisitorName extends string, Node> = {
   meta: {
     docs: {
@@ -91,6 +109,50 @@ export const noRawDomJsx: RuleModule<"JSXOpeningElement", JsxOpeningElementNode>
   },
 }
 
+export const noRawErrorMessage: {
+  meta: RuleModule<"MemberExpression", MemberExpressionNode>["meta"]
+  create(context: RuleContext): {
+    CatchClause(node: CatchClauseNode): void
+    "CatchClause:exit"(): void
+    MemberExpression(node: MemberExpressionNode): void
+  }
+} = {
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow direct Error.message access in app error rendering.",
+    },
+  },
+  create(context) {
+    const caughtErrorNames: Array<Set<string>> = []
+
+    return {
+      CatchClause(node) {
+        const caughtName = node.param?.type === "Identifier" ? node.param.name : undefined
+
+        caughtErrorNames.push(new Set(caughtName === undefined ? [] : [caughtName]))
+      },
+      "CatchClause:exit"() {
+        caughtErrorNames.pop()
+      },
+      MemberExpression(node) {
+        if (
+          node.property?.type !== "Identifier" ||
+          node.property.name !== "message" ||
+          !isCaughtErrorMessageAccess(caughtErrorNames, node)
+        ) {
+          return
+        }
+
+        context.report({
+          node: node.property,
+          message: "Use the RPC error mapper instead of direct Error.message access.",
+        })
+      },
+    }
+  },
+}
+
 function isForbiddenUiImport(moduleName: string) {
   return (
     forbiddenUiImports.exact.has(moduleName) ||
@@ -108,4 +170,15 @@ function getJsxElementName(nameNode: JsxNameNode | undefined) {
 
 function isRawDomTag(tagName: string | undefined) {
   return typeof tagName === "string" && /^[a-z]/.test(tagName)
+}
+
+function isCaughtErrorMessageAccess(
+  caughtErrorNames: Array<Set<string>>,
+  node: MemberExpressionNode,
+) {
+  if (node.object?.type !== "Identifier" || node.object.name === undefined) {
+    return false
+  }
+
+  return caughtErrorNames.some((names) => names.has(node.object?.name ?? ""))
 }

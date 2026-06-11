@@ -54,6 +54,14 @@ This section is experimental. You can discuss with user and challenge the guidel
 
 When the changes are visible in the front end (typically but not only : new features, new UX flows etc)
 
+# API errors
+
+Server error messages are not user-facing UI copy.
+
+RPC code must return project-level `AppError` values for user-visible failures. The server-side `AppErrorKind` must expose a stable app error reason, a translation key, and structured params; the RPC boundary is responsible for converting `AppError` to `ConnectError`.
+
+Do not construct `ConnectError` directly outside the central RPC app-error adapter. Do not make frontend code depend on parsing backend error message strings. Frontend error UI must go through the approved RPC error mapper and use fallback copy for unknown errors.
+
 # Commiting (only when user asks)
 
 Only commit when the user has explicitely asked you. Never take the initiative to commit.

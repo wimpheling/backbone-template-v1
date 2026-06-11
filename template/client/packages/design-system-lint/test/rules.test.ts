@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { noExternalUiImports, noRawDomJsx } from "../src/rules.js"
+import { noExternalUiImports, noRawDomJsx, noRawErrorMessage } from "../src/rules.js"
 
 type RuleReport = {
   message: string
@@ -59,6 +59,38 @@ test("no-external-ui-imports flags direct imports from external UI libraries", (
 test("no-external-ui-imports allows imports from the design system", () => {
   const reports = runRule(noExternalUiImports, "ImportDeclaration", {
     source: { value: "@backbone/design-system" },
+  })
+
+  assert.deepEqual(reports, [])
+})
+
+test("no-raw-error-message flags direct caught error message access", () => {
+  const reports: RuleReport[] = []
+  const visitor = noRawErrorMessage.create({
+    report(report: RuleReport) {
+      reports.push(report)
+    },
+  })
+
+  visitor.CatchClause({
+    param: { name: "caught", type: "Identifier" },
+  })
+  visitor.MemberExpression({
+    object: { name: "caught", type: "Identifier" },
+    property: { name: "message", type: "Identifier" },
+  })
+  visitor["CatchClause:exit"]()
+
+  assert.equal(reports.length, 1)
+  const report = reports[0]
+  assert.ok(report)
+  assert.match(report.message, /Use the RPC error mapper/)
+})
+
+test("no-raw-error-message allows non-error domain message fields", () => {
+  const reports = runRule(noRawErrorMessage, "MemberExpression", {
+    object: { name: "notification", type: "Identifier" },
+    property: { name: "message", type: "Identifier" },
   })
 
   assert.deepEqual(reports, [])
