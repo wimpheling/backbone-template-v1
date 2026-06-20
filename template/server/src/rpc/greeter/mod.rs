@@ -4,6 +4,7 @@ use connectrpc::{ConnectError, RequestContext, Response};
 
 use crate::{
     proto::helloworld::v1::{GreeterService, OwnedSayHelloRequestView, SayHelloResponse},
+    rpc::AppError,
     state::AppState,
 };
 
@@ -26,6 +27,8 @@ impl GreeterService for GreeterRpcService {
         ctx: RequestContext,
         request: OwnedSayHelloRequestView,
     ) -> Result<Response<SayHelloResponse>, ConnectError> {
-        say_hello::handle(self, ctx, &request).await
+        say_hello::handle(self, ctx, &request)
+            .await
+            .map_err(AppError::into_connect_error)
     }
 }

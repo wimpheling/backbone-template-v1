@@ -1,15 +1,15 @@
-use connectrpc::{ConnectError, RequestContext, Response};
+use connectrpc::{RequestContext, Response};
 
 use crate::proto::helloworld::v1::{OwnedSayHelloRequestView, SayHelloResponse};
 
 use super::GreeterRpcService;
-use crate::rpc::connect_internal;
+use crate::rpc::{AppError, RpcResult, ok};
 
 pub async fn handle(
     service: &GreeterRpcService,
     _ctx: RequestContext,
     request: &OwnedSayHelloRequestView,
-) -> Result<Response<SayHelloResponse>, ConnectError> {
+) -> RpcResult<Response<SayHelloResponse>> {
     let name = request.name.trim();
     let name = if name.is_empty() { "World" } else { name };
 
@@ -18,9 +18,9 @@ pub async fn handle(
         .db
         .record_hello_world_input(name)
         .await
-        .map_err(connect_internal)?;
+        .map_err(AppError::internal)?;
 
-    Response::ok(SayHelloResponse {
+    ok(SayHelloResponse {
         greeting: format!("Hello, {name}!"),
         ..Default::default()
     })

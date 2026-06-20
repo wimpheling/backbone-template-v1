@@ -11,11 +11,13 @@ workspace = true
 [dependencies]
 anyhow = "1"
 axum = "0.8"
+base64 = "0.22"
 buffa = { version = "0.5", features = ["json"] }
 buffa-types = { version = "0.5", features = ["json"] }
 connectrpc = { version = "0.4", features = ["axum"] }
 http-body = "1"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite", "migrate", "macros"] }
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal"] }
 tower-http = { version = "0.6", features = ["cors", "trace"] }

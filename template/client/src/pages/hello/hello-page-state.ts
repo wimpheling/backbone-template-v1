@@ -1,7 +1,5 @@
-import { createClient } from "@connectrpc/connect"
-import { createConnectTransport } from "@connectrpc/connect-web"
 import { create } from "zustand"
-import { GreeterService } from "../../gen/helloworld/v1/helloworld_pb"
+import { greeterClient, toErrorMessage } from "../../app/rpc"
 
 type HelloPageState = {
   error: string | null
@@ -11,22 +9,6 @@ type HelloPageState = {
   sayHello(): Promise<void>
   setName(name: string): void
 }
-
-function requireEnv(name: string): string {
-  const value = import.meta.env[name]
-
-  if (value === undefined || value === "") {
-    throw new Error(`Missing required environment variable: ${name}`)
-  }
-
-  return value
-}
-
-const transport = createConnectTransport({
-  baseUrl: requireEnv("VITE_SERVER_URL"),
-})
-
-const greeter = createClient(GreeterService, transport)
 
 export const useHelloPageStore = create<HelloPageState>((set, get) => ({
   error: null,
@@ -40,10 +22,10 @@ export const useHelloPageStore = create<HelloPageState>((set, get) => ({
     set({ error: null, isCalling: true })
 
     try {
-      const response = await greeter.sayHello({ name: get().name })
+      const response = await greeterClient.sayHello({ name: get().name })
       set({ greeting: response.greeting })
     } catch (caught) {
-      set({ error: caught instanceof Error ? caught.message : "Request failed" })
+      set({ error: toErrorMessage(caught, "Request failed") })
     } finally {
       set({ isCalling: false })
     }
