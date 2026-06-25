@@ -32,6 +32,9 @@ client-test:
 rust-test:
     cargo test --workspace
 
+spec-extract:
+    cargo run -p spec-engine --bin spec-extractor -- --project-root . --out spec/app-spec.json
+
 rust-clippy:
     cargo clippy --workspace --all-targets
 
